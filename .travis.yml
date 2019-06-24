@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t woontsou/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run woontsou/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t woontsou/multi-client ./client
+  - docker build -t woontsou/multi-nginx ./nginx
+  - docker build -t woontsou/multi-server ./server
+  - docker build -t woontsou/multi-worker ./worker
+  # login into docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push -t woontsou/multi-client ./client
+  - docker push -t woontsou/multi-nginx ./nginx
+  - docker push -t woontsou/multi-server ./server
+  - docker push -t woontsou/multi-worker ./worker
